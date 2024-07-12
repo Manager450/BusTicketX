@@ -151,7 +151,12 @@ def signin(request):
        if request.method == 'POST':
            email = request.POST['email']
            password = request.POST['password']
-           get_user_info(request, email, password)
+           user = authenticate(request, username=email, password=password)
+
+           if user is not None:
+               return redirect('home')
+           else:
+                messages.error(request, 'Invalid email or password!')
                 
            
        return render(request, 'signin.html')
