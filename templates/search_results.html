@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Search Results{% endblock %}
+{% block content %}
+<div class="search-results-container">
+    <h2>Search Results</h2>
+    <p>From: {{ from }}</p>
+    <p>To: {{ to }}</p>
+    <p>Date of Journey: {{ date_of_journey }}</p>
+    <p>Return Date: {{ return_date }}</p>
+    <!-- Add search results display logic here -->
+</div>
+{% endblock %}
+

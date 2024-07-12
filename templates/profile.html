@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - BusTicketX{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Profile</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Update Profile</button>
+    </form>
+</div>
+{% endblock %}

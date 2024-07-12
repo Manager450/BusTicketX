@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - BusTicketX{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to BusTicketX</h1>
+    <p class="lead">Your reliable bus reservation system.</p>
+    <hr class="my-4">
+    <p>Find your bus and make a reservation with ease.</p>
+    <a class="btn btn-primary btn-lg" href="{% url 'findbus' %}" role="button">Find Bus</a>
+</div>
+{% endblock %}

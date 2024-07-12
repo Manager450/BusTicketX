@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Seat - BusTicketX{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Book Seat</h2>
+    <p>Bus from {{ bus.route.origin }} to {{ bus.route.destination }} on {{ bus.departure_time }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Confirm Booking</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Find Bus{% endblock %}
+{% block content %}
+<div class="search-container">
+    <h2>Buy Ticket</h2>
+    <form method="get" action="{% url 'search_results' %}">
+        <div class="form-group">
+            <label for="from">From</label>
+            <input type="text" id="from" name="from" required>
+        </div>
+        <div class="form-group">
+            <label for="to">To</label>
+            <input type="text" id="to" name="to" required>
+        </div>
+        <div class="form-group">
+            <label for="date_of_journey">Date of Journey</label>
+            <input type="date" id="date_of_journey" name="date_of_journey" required>
+        </div>
+        <div class="form-group">
+            <label for="return_date">Return Date (Optional)</label>
+            <input type="date" id="return_date" name="return_date">
+        </div>
+        <button type="submit">Search</button>
+    </form>
+</div>
+{% endblock %}
+
