@@ -124,18 +124,21 @@ def settings(request):
     return render(request, 'settings.html', {'password_form': password_form})
 
 def signup(request):
-       if request.method == 'POST':
-           email = request.POST['email']
-           password = request.POST['password']
-           password2 = request.POST['password2']
-           if password == password2:
-               user = User.objects.create_user(username=email, email=email, password=password)
-               user.save()
-               messages.success(request, 'Account created successfully!')
-               return redirect('signin')
-           else:
-               messages.error(request, 'Passwords do not match!')
-       return render(request, 'signup.html')
+    if request.method == 'POST':
+        email = request.POST['email']
+        password = request.POST['password']
+        password2 = request.POST['password2']
+        if password == password2:
+            user = User.objects.create_user(username=email, email=email, password=password)
+            user.save()
+            login(request, user)  # Log the user in after creation
+            messages.success(request, 'Account created successfully!')
+            return redirect('home')
+        else:
+            messages.error(request, 'Passwords do not match!')
+            return render(request, 'signup.html')
+    else:
+        return render(request, 'signup.html')
 
 def get_user_info(request, email, password):
 
@@ -148,20 +151,24 @@ def get_user_info(request, email, password):
 
 
 def signin(request):
-       if request.method == 'POST':
-           email = request.POST['email']
-           password = request.POST['password']
-           user = authenticate(request, username=email, password=password)
-
-           if user is not None:
-               return redirect('home')
-           else:
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('home')
+            else:
                 messages.error(request, 'Invalid email or password!')
-                
-           
-       return render(request, 'signin.html')
+        else:
+            messages.error(request, 'Invalid email or password!')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'signin.html', {'form': form})
 
-def signout(request):
+def logout(request):
     logout(request)
     return redirect('home')
 
