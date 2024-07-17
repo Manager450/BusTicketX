@@ -1,13 +1,19 @@
 {% extends 'base.html' %}
-{% block title %}Search Results{% endblock %}
-{% block content %}
-<div class="search-results-container">
-    <h2>Search Results</h2>
-    <p>From: {{ from }}</p>
-    <p>To: {{ to }}</p>
-    <p>Date of Journey: {{ date_of_journey }}</p>
-    <p>Return Date: {{ return_date }}</p>
-    <!-- Add search results display logic here -->
-</div>
-{% endblock %}
 
+{% block content %}
+<h2>Available Buses</h2>
+{% if buses %}
+    {% for bus in buses %}
+        <div>
+            <h3>{{ bus.operator.name }}</h3> <!-- Assuming bus.operator has a 'name' field -->
+            <p>Departure: {{ bus.schedule.departure_time }} | Arrival: {{ bus.schedule.arrival_time }}</p> <!-- Assuming schedule is related to bus -->
+            <p>Duration: {{ bus.schedule.route.duration }}</p>
+            <p>Available Seats: {{ bus.schedule.available_seats }}</p>
+            <p>Fare: {{ bus.fare }}</p>
+            <a href="{% url 'select_seats' bus.id date %}">Select</a>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No buses available for the selected route and date.</p>
+{% endif %}
+{% endblock %}

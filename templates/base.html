@@ -11,14 +11,19 @@
 <body>
     <header>
         <nav>
+            <a href="{% url 'home' %}">BusTicketX</a>
             <ul>
                 <li><a href="{% url 'home' %}">Home</a></li>
                 <li><a href="{% url 'findbus' %}">Find Bus</a></li>
-                <li><a href="{% url 'about' %}">About</a></li>
-                <li><a href="{% url 'faqs' %}">FAQ</a></li>
-                <li><a href="{% url 'help' %}">Help</a></li>
                 {% if user.is_authenticated %}
-                    <li><a href="{% url 'profile' %}">Profile</a></li>
+                <li><a href="{% url 'seebookings' %}">See Bookings</a></li>
+                <li><a href="{% url 'profile' %}">Profile</a></li>
+                <li><a href="{% url 'settings' %}">Settings</a></li>
+                {% endif %}
+                <li><a href="{% url 'help' %}">Help</a></li>
+                <li><a href="{% url 'faqs' %}">FAQ</a></li>
+                <li><a href="{% url 'about' %}">About</a></li>
+                {% if user.is_authenticated %}
                     <li><a href="{% url 'logout' %}">Logout</a></li>
                 {% else %}
                     <li><a href="{% url 'signin' %}">Login</a></li>

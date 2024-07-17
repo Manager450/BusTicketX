@@ -4,13 +4,15 @@
 <div class="search-container">
     <h2>Buy Ticket</h2>
     <form method="get" action="{% url 'search_results' %}">
-        <div class="form-group">
-            <label for="from">From</label>
-            <input type="text" id="from" name="from" required>
+        <div>
+            <label
+            for="id_from_location">From:</label>
+            {{ form.from_location }}
         </div>
-        <div class="form-group">
-            <label for="to">To</label>
-            <input type="text" id="to" name="to" required>
+        <div>
+            <label
+            for="id_to_location">To:</label>
+            {{ form.to_location }}
         </div>
         <div class="form-group">
             <label for="date_of_journey">Date of Journey</label>

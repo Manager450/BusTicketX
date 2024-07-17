@@ -2,9 +2,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
-from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
+from django.contrib.auth import login, logout as django_logout, authenticate, update_session_auth_hash
 from django.contrib import messages
-from .models import Route, Bus, Booking
+from .models import Route, Bus, Booking, Schedule
 from django.utils import timezone
 import stripe
 from django.conf import settings
@@ -13,6 +13,8 @@ from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, 
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
 from django.http import JsonResponse
+from django.db import IntegrityError
+from .forms import UpdateProfileForm, CustomPasswordChangeForm,BusSearchForm
 
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'password_reset.html'
@@ -94,16 +96,20 @@ def home(request):
 
 @login_required
 def findbus(request):
-    return render(request, 'findbus.html')
+    form = BusSearchForm()
+    return render(request, 'findbus.html', {'form': form})
 
 @login_required
 def book_seat(request, bus_id):
     bus = Bus.objects.get(id=bus_id)
-    if request.method == "POST":
-        Booking.objects.create(user=request.user, bus=bus, date=timezone.now())
-        messages.success(request, 'Seat booked successfully!')
-        return redirect('seebookings')
-    return render(request, 'book_seat.html', {'bus': bus})
+    if request.method == 'POST':
+          seat_numbers = request.POST.getlist('seats')
+          booking = Booking.objects.create(user=request.user, bus=bus, date=date)
+          for seat in seat_numbers:
+              Passenger.objects.create(booking=booking, name=request.POST['name'], age=request.POST['age'], gender=request.POST['gender'])
+          return redirect('booking_summary', booking_id=booking.id)
+    return render(request, 'reservations/book_seat.html', {'bus': bus})
+
 
 @login_required
 def seebookings(request):
@@ -113,30 +119,69 @@ def seebookings(request):
 @login_required
 def settings(request):
     if request.method == 'POST':
-        password_form = PasswordChangeForm(request.user, request.POST)
+        profile_form = UpdateProfileForm(request.POST, instance=request.user)
+        password_form = CustomPasswordChangeForm(request.user, request.POST)
+        
+        if profile_form.is_valid():
+            profile_form.save()
+            messages.success(request, 'Your profile was successfully updated!')
+            return redirect('settings')
+        
         if password_form.is_valid():
             user = password_form.save()
-            update_session_auth_hash(request, user)
+            update_session_auth_hash(request, user)  # Important!
             messages.success(request, 'Your password was successfully updated!')
             return redirect('settings')
     else:
-        password_form = PasswordChangeForm(request.user)
-    return render(request, 'settings.html', {'password_form': password_form})
+        profile_form = UpdateProfileForm(instance=request.user)
+        password_form = CustomPasswordChangeForm(request.user)
+
+    return render(request, 'settings.html', {
+        'profile_form': profile_form,
+        'password_form': password_form
+    })
+
+@login_required
+def update_profile(request):
+    if request.method == 'POST':
+        form = UpdateProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated.')
+            return redirect('settings')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = UpdateProfileForm(instance=request.user)
+    return render(request, 'settings.html', {'profile_form': form})
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important!
+            messages.success(request, 'Your password has been updated successfully.')
+            return redirect('settings')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = CustomPasswordChangeForm(request.user)
+    return render(request, 'settings.html', {'password_form': form})
+
 
 def signup(request):
     if request.method == 'POST':
         email = request.POST['email']
         password = request.POST['password']
-        password2 = request.POST['password2']
-        if password == password2:
+        try:
             user = User.objects.create_user(username=email, email=email, password=password)
             user.save()
-            login(request, user)  # Log the user in after creation
-            messages.success(request, 'Account created successfully!')
+            login(request, user)
             return redirect('home')
-        else:
-            messages.error(request, 'Passwords do not match!')
-            return render(request, 'signup.html')
+        except IntegrityError:
+            return render(request, 'signup.html', {'error': 'Email already taken'})
     else:
         return render(request, 'signup.html')
 
@@ -149,41 +194,66 @@ def get_user_info(request, email, password):
     else:
         messages.error(request, 'Invalid email or password!')
 
-
 def signin(request):
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('home')
-            else:
-                messages.error(request, 'Invalid email or password!')
+        email = request.POST['email']
+        password = request.POST['password']
+        user = authenticate(request, username=email, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('home')
         else:
-            messages.error(request, 'Invalid email or password!')
+            return render(request, 'signin.html', {'error': 'Invalid credentials'})
     else:
-        form = AuthenticationForm()
-    return render(request, 'signin.html', {'form': form})
+        return render(request, 'signin.html')
 
-def logout(request):
-    logout(request)
+def logout_view(request):
+    django_logout(request)
     return redirect('home')
 
+from django.shortcuts import render
+from .forms import BusSearchForm  # Adjust the import as per your project structure
+from .models import Route, Bus  # Adjust the import as per your project structure
+
 def search_results_view(request):
-       from_location = request.GET['from']
-       to_location = request.GET['to']
-       date_of_journey = request.GET['date_of_journey']
-       return_date = request.GET['return_date']
-       context = {
-           'from': from_location,
-           'to': to_location,
-           'date_of_journey': date_of_journey,
-           'return_date': return_date,
-       }
-       return render(request, 'search_results.html', context)
+    if request.method == 'POST':
+        form = BusSearchForm(request.POST)
+        if form.is_valid():
+            from_location = form.cleaned_data['from_location']
+            to_location = form.cleaned_data['to_location']
+            date = form.cleaned_data['date']
+            
+            # Fetch routes matching the start and end points
+            routes = Route.objects.filter(origin=from_location, destination=to_location)
+
+            # Fetch buses available on the specified routes and date
+            buses = Bus.objects.filter(
+                schedule__route__in=routes,
+                schedule__date=date
+            ).distinct()
+
+            # You may want to prefetch related data to optimize queries
+            buses = buses.prefetch_related('operator', 'schedule__route')
+
+            return render(request, 'search_results.html', {'buses': buses, 'date': date})
+    
+    else:  # Handle GET request
+        form = BusSearchForm()  # Create a new instance of the form
+        return render(request, 'search_results.html', {'form': form})
+
+
+@login_required
+def booking_summary(request, booking_id):
+      booking = Booking.objects.get(id=booking_id)
+      if request.method == 'POST':
+          # Handle payment (integration required)
+          return redirect('booking_confirmation', booking_id=booking.id)
+      return render(request, 'reservations/booking_summary.html', {'booking': booking})
+
+@login_required
+def booking_confirmation(request, booking_id):
+      booking = Booking.objects.get(id=booking_id)
+      return render(request, 'reservations/booking_confirmation.html', {'booking': booking})
 
 def about(request):
     return render(request, 'about.html')

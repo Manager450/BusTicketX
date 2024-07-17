@@ -1,14 +1,26 @@
 {% extends 'base.html' %}
 
-{% block title %}Book Seat - BusTicketX{% endblock %}
-
 {% block content %}
-<div class="container">
-    <h2>Book Seat</h2>
-    <p>Bus from {{ bus.route.origin }} to {{ bus.route.destination }} on {{ bus.departure_time }}</p>
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-primary">Confirm Booking</button>
-    </form>
-</div>
+<h2>Book Seats</h2>
+<form method="POST">
+    {% csrf_token %}
+    <div class="seat-map">
+        <!-- Render seat map here -->
+        <label for="seats">Select Seats:</label>
+        <input type="checkbox" name="seats" value="1A"> 1A
+        <input type="checkbox" name="seats" value="1B"> 1B
+        <!-- Repeat for each seat -->
+    </div>
+    <label for="name">Name:</label>
+    <input type="text" name="name" required>
+    <label for="age">Age:</label>
+    <input type="number" name="age" required>
+    <label for="gender">Gender:</label>
+    <select name="gender" required>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+    </select>
+    <button type="submit">Continue to Booking</button>
+</form>
 {% endblock %}
+

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Booking Summary</h2>
+<p>Bus Operator: {{ booking.bus.operator }}</p>
+<p>Departure: {{ booking.bus.departure_time }} | Arrival: {{ booking.bus.arrival_time }}</p>
+<p>Selected Seats: {% for passenger in booking.passenger_set.all %} {{ passenger.seat_number }} {% endfor %}</p>
+<p>Total Fare: ${{ booking.total_fare }}</p>
+<form method="POST">
+    {% csrf_token %}
+    <h3>Payment</h3>
+    <!-- Render payment options here -->
+    <button type="submit">Confirm Booking</button>
+</form>
+{% endblock %}
+

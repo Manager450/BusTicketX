@@ -1,13 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}Settings - BusTicketX{% endblock %}
+{% block title %}Settings{% endblock %}
+
 {% block content %}
 <div class="container">
     <h2>Settings</h2>
-    <form method="post">
+    <form method="post" action="{% url 'update_profile' %}">
         {% csrf_token %}
+        <h3>Update Profile</h3>
+        {{ profile_form.as_p }}
+        <button type="submit">Update Profile</button>
+    </form>
+    
+    <form method="post" action="{% url 'change_password' %}">
+        {% csrf_token %}
+        <h3>Change Password</h3>
         {{ password_form.as_p }}
-        <button type="submit" class="btn btn-primary">Change Password</button>
+        <button type="submit">Change Password</button>
     </form>
 </div>
 {% endblock %}
