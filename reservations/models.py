@@ -30,6 +30,9 @@ class Schedule(models.Model):
 
     def __str__(self):
         return f"{self.bus.operator} on {self.route} at {self.departure_time}"
+    
+    class Meta:
+        unique_together = ['bus', 'date', 'departure_time']
 
 
 class Booking(models.Model):

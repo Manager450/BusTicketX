@@ -16,6 +16,7 @@ from django.http import JsonResponse
 from django.db import IntegrityError
 from .forms import UpdateProfileForm, CustomPasswordChangeForm,BusSearchForm
 
+
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'password_reset.html'
     success_url = reverse_lazy('password_reset_done')
@@ -211,36 +212,38 @@ def logout_view(request):
     django_logout(request)
     return redirect('home')
 
-from django.shortcuts import render
-from .forms import BusSearchForm  # Adjust the import as per your project structure
-from .models import Route, Bus  # Adjust the import as per your project structure
-
 def search_results_view(request):
-    if request.method == 'POST':
-        form = BusSearchForm(request.POST)
+    if request.method == 'GET':
+        form = BusSearchForm(request.GET)
         if form.is_valid():
             from_location = form.cleaned_data['from_location']
             to_location = form.cleaned_data['to_location']
             date = form.cleaned_data['date']
+
+            print(f"Searching for buses from {from_location} to {to_location} on {date}")
             
             # Fetch routes matching the start and end points
             routes = Route.objects.filter(origin=from_location, destination=to_location)
+            print(f"Found routes: {routes}")
 
-            # Fetch buses available on the specified routes and date
-            buses = Bus.objects.filter(
-                schedule__route__in=routes,
-                schedule__date=date
-            ).distinct()
+            # Fetch schedules for the specified routes and date
+            schedules = Schedule.objects.filter(
+                route__origin=from_location,
+                route__destination=to_location,
+                date=date
+            ).select_related('bus', 'route')
+            print(f"Found schedules: {schedules}")
 
-            # You may want to prefetch related data to optimize queries
-            buses = buses.prefetch_related('operator', 'schedule__route')
+            buses = [schedule.bus for schedule in schedules]
+            print(f"Found Buses: {buses}")
 
             return render(request, 'search_results.html', {'buses': buses, 'date': date})
-    
-    else:  # Handle GET request
-        form = BusSearchForm()  # Create a new instance of the form
-        return render(request, 'search_results.html', {'form': form})
+        else:
+            print("Form is not valid")
+    else:
+        form = BusSearchForm()  # Create a new instance of the form for GET request
 
+    return render(request, 'search_results.html', {'form': form})
 
 @login_required
 def booking_summary(request, booking_id):
